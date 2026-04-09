@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}BDIB Answer{% endblock %}
+
+{% block content %}
+<div class="glass-container wide">
+  <h1>Organic Farming Chat</h1>
+
+  <div class="chat-container" id="the_content">
+    {% if chat_history %}
+      <!-- Provide an option to clear chat history -->
+      <div style="text-align: right; margin-bottom: 1rem;">
+         <button class="btn" style="width: auto; padding: 6px 12px; font-size: 0.9rem;" onclick="ClearFields()">New Chat</button>
+      </div>
+
+      {% for entry in chat_history %}
+      <div class="chat-bubble chat-question">
+        <h4>Your Question</h4>
+        <p style="margin: 0;">{{ entry['question'] }}</p>
+      </div>
+
+      <div class="chat-bubble chat-answer">
+        <h4>Synthesized Answer</h4>
+        <p style="margin: 0; white-space: pre-wrap;">{{ entry['answer'] }}</p>
+        
+        <br>
+        <h4>Raw Context Match</h4>
+        <p style="margin: 0; font-size: 0.9rem; opacity: 0.8; white-space: pre-wrap;">{{ entry['ChipAnswer'] }}</p>
+      </div>
+      {% endfor %}
+
+      <!-- Rating Form -->
+      <div class="chat-bubble" style="background: rgba(255,255,255,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+        <h4 style="color: var(--text-dark); margin-top: 0;">Help Us Improve!</h4>
+        <form action="{{ url_for('bdib_bp.rating_submission_bdib') }}" method="post" id="ratingForm">
+          <div style="display: flex; gap: 2rem; justify-content: center; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div>
+              <label for="rating1" style="font-weight: 600;">BDIB Rating: </label>
+              <select id="rating1" name="rate" required style="padding: 5px; border-radius: 8px;">
+                <option value="" selected>Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div>
+              <label for="rating2" style="font-weight: 600;">Standard Rating: </label>
+              <select id="rating2" name="rate2" required style="padding: 5px; border-radius: 8px;">
+                <option value="" selected>Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn" style="width: auto; padding: 6px 20px; font-size: 0.9rem;" onclick="notification()">Submit Rating</button>
+        </form>
+      </div>
+
+    {% endif %}
+  </div>
+
+  <!-- New Question Form -->
+  <form action="{{ url_for('bdib_bp.submit_question_bdib') }}" method="post" style="margin-top: 2rem; display: flex; gap: 10px;">
+    <input type="text" id="user_input" name="quesInput" required autocomplete="off" placeholder="Ask another question..." style="flex-grow: 1; margin: 0; border: none; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" />
+    <button type="submit" class="btn" style="width: auto; padding: 0 20px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<script>
+  function notification() {
+    alert("Thank you! Rating has been submitted.");
+  }
+
+  function ClearFields() {
+    document.getElementById("the_content").innerHTML = "";
+    fetch("{{ url_for('bdib_bp.clear_chat_history_bdib') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => location.reload())
+    .catch(error => console.error('Error:', error));
+  }
+
+  function scrollToBottom() {
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  window.onload = scrollToBottom;
+</script>
+{% endblock %}

@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reports</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+        background: #f8f9fa;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: white;
+        table-layout: fixed;
+      }
+      th,
+      td {
+        padding: 8px;
+        border: 1px solid #ccc;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #343a40;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background: #f2f2f2;
+      }
+      select,
+      button,
+      input[type="file"] {
+        margin-right: 10px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .table-container {
+        max-height: 350px;
+        overflow-y: auto;
+        margin-top: 20px;
+        border: 1px solid #ccc;
+        background: white;
+        border-radius: 6px;
+      }
+      /* Sticky Table Header */
+      .table-container table thead th {
+        position: sticky;
+        top: 0;
+        background: #343a40;
+        color: white;
+        z-index: 10;
+      }
+      .muted {
+        color: #666;
+        font-size: 12px;
+      }
+      .sensorFunctionSelect,
+      .performanceMeasureSelect {
+        width: 100%;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+    <style>
+  /* --- Floating Chat Widget --- */
+  .chat-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+  .chat-fab:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+  }
+
+  .chat-widget {
+    position: fixed;
+    right: 18px;
+    bottom: 86px; /* sits above the button */
+    width: min(380px, calc(100vw - 36px));
+    height: 520px;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+    z-index: 9999;
+    overflow: hidden;
+    display: none; /* hidden by default */
+  }
+  .chat-widget.open {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-header {
+    padding: 12px 12px;
+    background: #343a40;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .chat-header .title {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .chat-header .actions {
+    display: flex;
+    gap: 8px;
+  }
+  .chat-header button {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .chat-header button:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .chat-body {
+    flex: 1;
+    padding: 12px;
+    background: #f8f9fa;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .chat-footer {
+    padding: 10px;
+    border-top: 1px solid #eee;
+    background: #fff;
+  }
+  .chat-footer form {
+    display: flex;
+    gap: 8px;
+  }
+  .chat-footer input {
+    flex: 1;
+    padding: 10px 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+  }
+  .chat-footer button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chat-footer button:hover {
+    background: #0056b3;
+  }
+
+  .chat-msg {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .chat-msg .label {
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .chat-download-btn {
+    margin-top: 10px;
+    background: #28a745 !important;
+  }
+</style>
+<style>
+  /* ===== Detail panel styling (drilldown) ===== */
+  .detail-row td {
+    background: #f6f7f9;
+    border-top: 0;
+  }
+
+  .detail-box { overflow-x: auto; }
+.detail-box table { min-width: 720px; }
+
+
+  .detail-box {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+  }
+
+  .detail-title {
+    font-size: 13px;
+    color: #111827;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Make the detail table visually distinct */
+  .detail-box table {
+    border-collapse: separate !important;
+    border-spacing: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .detail-box thead th {
+    background: #eef2ff !important;   /* different from main table */
+    color: #111827 !important;
+    border: none !important;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 10px !important;
+  }
+
+  .detail-box tbody td {
+    border: none !important;
+    border-top: 1px solid #eef0f3 !important;
+    padding: 10px !important;
+    font-size: 12.5px;
+    color: #1f2937;
+    background: #ffffff;
+  }
+
+  .detail-box tbody tr:nth-child(even) td {
+    background: #fafafa;  /* subtle zebra, different from main */
+  }
+
+  /* Optional: make long notes readable */
+  .detail-box td:last-child {
+    white-space: normal;
+    line-height: 1.35;
+  }
+</style>
+<style>
+  .summary-row.is-open {
+    outline: 2px solid rgba(26, 115, 232, 0.25);
+    background: #f0f7ff !important;
+  }
+</style>
+
+
+  </head>
+
+  <body>
+    <!-- Upload Modal (PUT THIS INSIDE <body>) -->
+    <div
+      id="uploadModal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 9999;
+        padding: 30px;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          max-width: 720px;
+          margin: 40px auto;
+          border-radius: 12px;
+          padding: 18px 18px 14px 18px;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          "
+        >
+          <h3 style="margin: 0">Upload a Report</h3>
+          <button
+            type="button"
+            onclick="closeUploadModal()"
+            style="background: #6c757d"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div style="margin-top: 10px; line-height: 1.35">
+          <p style="margin: 8px 0">
+            1) Download the template, fill it out, then upload it below.
+          </p>
+
+          <a
+            href="{{ url_for('nchrp_bp.download_template') }}"
+            style="
+              display: inline-block;
+              background: #6c757d;
+              color: #fff;
+              padding: 8px 12px;
+              border-radius: 8px;
+              text-decoration: none;
+              font-weight: 600;
+            "
+          >
+            Download Template
+          </a>
+
+          <hr
+            style="margin: 14px 0; border: none; border-top: 1px solid #eee"
+          />
+
+          <!-- ✅ THIS FORM TAG WAS MISSING -->
+          <form
+            action="{{ url_for('nchrp_bp.upload_report') }}"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <div style="margin-bottom: 12px">
+              <label style="font-weight: 700">Template file (required)</label
+              ><br />
+              <input
+                type="file"
+                name="report_file"
+                accept=".xlsx,.csv"
+                required
+              />
+              <div class="muted">Accepted: .xlsx or .csv</div>
+            </div>
+
+            <div style="margin-bottom: 12px">
+              <label style="font-weight: 700">Metadata file (optional)</label
+              ><br />
+              <input
+                type="file"
+                name="metadata_file"
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.webp,.csv,.xlsx"
+              />
+              <div class="muted">Optional: PDF/DOC/DOCX/TXT/Images/etc.</div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end">
+              <button
+                type="button"
+                onclick="closeUploadModal()"
+                style="background: #dc3545"
+              >
+                Cancel
+              </button>
+              <button type="submit" style="background: #28a745">Upload</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <div
+      style="
+        background: #ffdddd;
+        padding: 12px 18px;
+        border-left: 4px solid #d9534f;
+        color: #a94442;
+        border-radius: 4px;
+        width: 90%;
+        margin: 15px auto;
+        font-weight: bold;
+        text-align: center;
+      "
+    >
+      {{ messages[0] }}
+    </div>
+    {% endif %} {% endwith %}
+
+    <h1>Test Results Summary</h1>
+    <div style="text-align: right; margin-top: 10px">
+      <a
+        href="{{ url_for('nchrp_bp.index_nchrp') }}"
+        style="text-decoration: none; color: #007bff; font-weight: bold"
+      >
+        ← Back to NCHRP Home
+      </a>
+    </div>
+
+    <!-- ======= TOP TOOLBAR ======= -->
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      "
+    >
+      <!-- Download Template CSV button -->
+      <a
+        href="{{ url_for('nchrp_bp.download_template') }}"
+        style="
+          background: #6c757d;
+          padding: 6px 14px;
+          border-radius: 6px;
+          color: white;
+          text-decoration: none;
+          font-weight: bold;
+        "
+      >
+        Download Template CSV
+      </a>
+
+      <!-- Upload Button -->
+      <button
+        type="button"
+        onclick="openUploadModal()"
+        style="background: #1a73e8"
+      >
+        Upload Report
+      </button>
+      <span class="muted">Fill the template, then upload.</span>
+
+      <!-- Download CSV button -->
+      <button
+        type="button"
+        onclick="downloadTableAsCSV()"
+        style="
+          background: #28a745;
+          padding: 6px 14px;
+          border-radius: 6px;
+          color: white;
+          border: none;
+          cursor: pointer;
+        "
+      >
+        Download CSV
+      </button>
+    </div>
+
+    <br />
+
+    <!-- Filter Section -->
+    <div style="margin-bottom: 15px">
+      <label>Year:</label>
+      <select id="yearFilter">
+        <option value="">All</option>
+        {% for year in range(2025, 1999, -1) %}
+        <option value="{{ year }}">{{ year }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Stage:</label>
+      <select id="stageFilter">
+        <option value="">All</option>
+        <option value="Stage 1 Level 1">Stage 1 Level 1</option>
+        <option value="Stage 1 Level 2">Stage 1 Level 2</option>
+        <option value="Stage 2">Stage 2</option>
+      </select>
+
+      <label>State:</label>
+      <select id="stateFilter">
+        <option value="">All</option>
+        {% set states = [] %} {% for test in tests %} {% set st = test["Test
+        Location (State)"] or "" %} {% if st and st not in states %} {% set _ =
+        states.append(st) %}
+        <option value="{{ st }}">{{ st }}</option>
+        {% endif %} {% endfor %}
+      </select>
+
+      <label>Sensor Technology:</label>
+      <select id="sensorFilter">
+        <option value="">All</option>
+        {% set sensors = [] %} {% for test in tests %} {% set tech =
+        test["Sensor Technology"] or "" %} {% if tech and tech not in sensors %}
+        {% set _ = sensors.append(tech) %}
+        <option value="{{ tech }}">{{ tech }}</option>
+        {% endif %} {% endfor %}
+      </select>
+
+      <button
+        onclick="resetFilters()"
+        style="background: #dc3545; color: white"
+      >
+        Reset Filters
+      </button>
+    </div>
+
+    <!-- Data Table (SUMMARY ONLY) -->
+    <div class="table-container">
+      <table id="reportTable">
+        <thead>
+          <tr>
+            <th>Test ID</th>
+            <th>Vendor Name</th>
+            <th>Sensor model name</th>
+            <th>Sensor Technology</th>
+            <th>Stage &amp; Level</th>
+            <th>Test Center</th>
+            <th>Test Location (State)</th>
+            <th>Date of Testing</th>
+            <!-- <th>Ground Truth Source</th> -->
+
+            <th>Sensor Function</th>
+            <th>Performance Measure</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+
+        <tbody id="tableBody">
+          {% for test in tests %}
+          <!-- SUMMARY ROW -->
+          <tr
+            class="summary-row"
+            data-filtered="visible"
+            data-test-id="{{ test['Test ID'] }}"
+            data-key="{{ test['__key__'] }}"
+          >
+            <td>{{ test["Test ID"] }}</td>
+            <td>{{ test["Vendor Name"] }}</td>
+            <td>{{ test["Sensor model name"] }}</td>
+            <td>{{ test["Sensor Technology"] }}</td>
+            <td>{{ test["Stage & Level"] }}</td>
+            <td>{{ test["Test Center"] }}</td>
+            <td>{{ test["Test Location (State)"] }}</td>
+            <td>{{ test["Date of Testing"] }}</td>
+            <!-- <td>{{ test["Ground Truth Source"] }}</td> -->
+
+            <td>
+              <select class="sensorFunctionSelect">
+                <option value="">Select…</option>
+              </select>
+            </td>
+
+            <td>
+              <select class="performanceMeasureSelect" disabled>
+                <option value="">Select…</option>
+              </select>
+            </td>
+
+            <td>
+              <button type="button" class="toggleDetailsBtn" disabled>
+                View
+              </button>
+            </td>
+          </tr>
+
+          <!-- DETAIL ROW (hidden by default) -->
+          <tr class="detail-row" style="display: none">
+            <td colspan="11">
+              <div
+                class="detail-box"
+                style="
+                  padding: 12px;
+                  border: 1px solid #ddd;
+                  border-radius: 8px;
+                  background: #fafafa;
+                "
+              >
+                <div
+                  class="detail-title"
+                  style="font-weight: bold; margin-bottom: 10px"
+                ></div>
+
+               <div class="detail-content" style="overflow-x:auto;"></div>
+
+
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      id="paginationControls"
+      style="margin-top: 15px; text-align: center"
+    ></div>
+
+    
+    
+        
+     
+    </div>
+
+    <!-- Floating Chat Widget -->
+<button id="chatFab" class="chat-fab" type="button" aria-label="Open chat">
+  💬
+</button>
+
+<div id="chatWidget" class="chat-widget" aria-hidden="true">
+  <div class="chat-header">
+    <div class="title">Report Assistant 🤖</div>
+    <div class="actions">
+      <button type="button" onclick="clearChatHistory()">Clear</button>
+      <button type="button" onclick="toggleChat(false)">—</button>
+      <button type="button" onclick="toggleChat(false)">✕</button>
+</div>
+
+  </div>
+
+  <div id="chatBody" class="chat-body">
+    <div class="chat-msg">
+      <div class="label">Hi!</div>
+      Ask a question about the reports.
+    </div>
+  </div>
+
+  <div class="chat-footer">
+    <form id="chatFormWidget" onsubmit="sendQuestion(event)">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Ask a question…"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</div>
+
+
+    <script>
+      // ----------------------------
+      // Filters (SUMMARY ROWS only)
+      // ----------------------------
+      function applyFilters() {
+  const year = document.getElementById("yearFilter").value;
+
+  const stage = (document.getElementById("stageFilter").value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const state = (document.getElementById("stateFilter").value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const sensor = (document.getElementById("sensorFilter").value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const summaryRows = document.querySelectorAll("#tableBody .summary-row");
+
+  summaryRows.forEach((row, i) => {
+    const cells = row.querySelectorAll("td");
+
+    const techText = (cells[3]?.innerText || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
+    const stageText = (cells[4]?.innerText || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
+    const stateText = (cells[6]?.innerText || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
+    const dateText = cells[7]?.innerText || "";
+
+    if (i < 5) console.log("ROW", i, "stateText=", JSON.stringify(stateText));
+
+    const rowYearMatch = dateText.match(/\b(20\d{2}|19\d{2})\b/);
+    const rowYear = rowYearMatch ? rowYearMatch[0] : "";
+
+    const matches =
+      (!year || rowYear === year) &&
+      (!stage || stageText.includes(stage)) &&
+      (!state || stateText === state) &&     // ✅ exact match for state
+      (!sensor || techText.includes(sensor));
+
+    row.dataset.filtered = matches ? "visible" : "hidden";
+
+    // close detail row when hidden
+    const detailRow = row.nextElementSibling;
+    if (detailRow && detailRow.classList.contains("detail-row") && !matches) {
+      detailRow.style.display = "none";
+      const btn = row.querySelector(".toggleDetailsBtn");
+      if (btn) btn.textContent = "View";
+      row.classList.remove("is-open");
+    }
+  });
+
+  currentPage = 1;
+  paginateTable();
+}
+
+
+      function resetFilters() {
+        document.getElementById("yearFilter").value = "";
+        document.getElementById("stageFilter").value = "";
+        document.getElementById("stateFilter").value = "";
+        document.getElementById("sensorFilter").value = "";
+        applyFilters();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        ["yearFilter", "stageFilter", "stateFilter", "sensorFilter"].forEach(
+          (id) => {
+            document
+              .getElementById(id)
+              .addEventListener("change", applyFilters);
+          }
+        );
+      });
+    </script>
+
+    <script>
+      // ----------------------------
+      // Download visible (filtered) SUMMARY rows as CSV
+      // ----------------------------
+      function csvEscape(text) {
+        text = (text ?? "")
+          .toString()
+          .replace(/(\r\n|\n|\r)/gm, " ")
+          .trim();
+        if (text.includes('"') || text.includes(",")) {
+          text = `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }
+
+      function downloadTableAsCSV() {
+        const headerRow = document.querySelector("#reportTable thead tr");
+        const headers = Array.from(headerRow.querySelectorAll("th")).map((th) =>
+          csvEscape(th.innerText)
+        );
+
+        const summaryRows = Array.from(
+          document.querySelectorAll("#tableBody .summary-row")
+        ).filter((r) => r.dataset.filtered !== "hidden");
+
+        if (summaryRows.length === 0) {
+          alert("No data available to download.");
+          return;
+        }
+
+        const csv = [];
+        csv.push(headers.join(","));
+
+        summaryRows.forEach((row) => {
+          const cols = row.querySelectorAll("td");
+          const rowData = Array.from(cols)
+            .slice(0, 12)
+            .map((td) => csvEscape(td.innerText));
+          csv.push(rowData.join(","));
+        });
+
+        const blob = new Blob([csv.join("\n")], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        const timestamp = new Date().toISOString().split("T")[0];
+        link.href = URL.createObjectURL(blob);
+        link.download = `stage_reports_${timestamp}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    </script>
+    <script>
+      function openUploadModal() {
+        document.getElementById("uploadModal").style.display = "block";
+      }
+      function closeUploadModal() {
+        document.getElementById("uploadModal").style.display = "none";
+      }
+      // close when clicking backdrop
+      document.addEventListener("click", (e) => {
+        const modal = document.getElementById("uploadModal");
+        if (modal && e.target === modal) closeUploadModal();
+      });
+    </script>
+
+    <script>
+      // ----------------------------
+      // Pagination (SUMMARY ROWS only)
+      // ----------------------------
+      let currentPage = 1;
+      const rowsPerPage = 5;
+
+      function getFilteredSummaryRows() {
+        return Array.from(
+          document.querySelectorAll("#tableBody .summary-row")
+        ).filter((row) => row.dataset.filtered !== "hidden");
+      }
+
+      function paginateTable() {
+        const summaryRows = getFilteredSummaryRows();
+        const totalRows = summaryRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        // Hide all rows first (both summary + detail)
+        document
+          .querySelectorAll("#tableBody .summary-row, #tableBody .detail-row")
+          .forEach((row) => {
+            row.style.display = "none";
+          });
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        summaryRows.slice(start, end).forEach((summaryRow) => {
+          summaryRow.style.display = "";
+
+          // Only show detail row if it was opened (display != none)
+          const detailRow = summaryRow.nextElementSibling;
+          const btn = summaryRow.querySelector(".toggleDetailsBtn");
+          if (detailRow && detailRow.classList.contains("detail-row")) {
+            if (btn && btn.textContent.trim() === "Hide") {
+              detailRow.style.display = "";
+            } else {
+              detailRow.style.display = "none";
+            }
+          }
+        });
+
+        updatePaginationControls(totalPages);
+      }
+
+      function updatePaginationControls(totalPages) {
+        const container = document.getElementById("paginationControls");
+        container.innerHTML = `
+          <button onclick="goToPage(${currentPage - 1})" ${
+          currentPage === 1 ? "disabled" : ""
+        }>&laquo; Prev</button>
+          Page ${currentPage} of ${totalPages}
+          <button onclick="goToPage(${currentPage + 1})" ${
+          currentPage === totalPages ? "disabled" : ""
+        }>Next &raquo;</button>
+        `;
+
+        container.querySelectorAll("button").forEach((btn) => {
+          btn.style.padding = "6px 12px";
+          btn.style.margin = "0 4px";
+          btn.style.borderRadius = "6px";
+          btn.style.border = "1px solid #ccc";
+          btn.style.cursor = "pointer";
+          btn.style.background = "#007bff";
+          btn.style.color = "white";
+        });
+      }
+
+      function goToPage(page) {
+        currentPage = page;
+        paginateTable();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("#tableBody .summary-row").forEach((row) => {
+          row.dataset.filtered = "visible";
+        });
+        paginateTable();
+      });
+    </script>
+
+
+    <script>
+  // ----------------------------
+  // Floating chat open/close
+  // ----------------------------
+  const chatFab = document.getElementById("chatFab");
+  const chatWidget = document.getElementById("chatWidget");
+
+  function toggleChat(forceOpen) {
+    const isOpen = chatWidget.classList.contains("open");
+    const next = typeof forceOpen === "boolean" ? forceOpen : !isOpen;
+
+    chatWidget.classList.toggle("open", next);
+    chatWidget.setAttribute("aria-hidden", String(!next));
+
+    if (next) {
+      // focus input when opened
+      setTimeout(() => {
+        const input = document.getElementById("userInput");
+        if (input) input.focus();
+      }, 50);
+    }
+  }
+
+  if (chatFab) {
+    chatFab.addEventListener("click", () => toggleChat());
+  }
+
+  // ----------------------------
+  // Chat (same endpoint as before)
+  // ----------------------------
+  async function sendQuestion(event) {
+    event.preventDefault();
+
+    const question = document.getElementById("userInput").value.trim();
+    if (!question) return;
+
+    // ensure widget is open
+    toggleChat(true);
+
+    const chatBody = document.getElementById("chatBody");
+
+    // add user's question bubble
+    const qDiv = document.createElement("div");
+    qDiv.className = "chat-msg";
+    qDiv.innerHTML = `<div class="label">You</div>${escapeHtml(question)}`;
+    chatBody.appendChild(qDiv);
+
+    // add thinking bubble
+    const thinking = document.createElement("div");
+    thinking.className = "chat-msg";
+    thinking.innerHTML = `<div class="label">Assistant</div>⏳ Thinking…`;
+    chatBody.appendChild(thinking);
+
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    try {
+      const response = await fetch("{{ url_for('nchrp_bp.ask_ai') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        thinking.innerHTML = `<div class="label">Assistant</div><span style="color:#c00;">${escapeHtml(
+          data.error || "Something went wrong."
+        )}</span>`;
+        chatBody.scrollTop = chatBody.scrollHeight;
+        return;
+      }
+
+      thinking.innerHTML = `<div class="label">Assistant</div>${escapeHtml(
+        data.answer || ""
+      )}`;
+
+      // download button (matched rows)
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "⬇ Download matched rows (CSV)";
+      btn.className = "chat-download-btn";
+      btn.style.width = "100%";
+      btn.style.marginTop = "10px";
+      btn.style.border = "none";
+      btn.style.padding = "10px 12px";
+      btn.style.borderRadius = "10px";
+      btn.style.cursor = "pointer";
+      btn.style.color = "white";
+
+      btn.addEventListener("click", () => {
+        downloadMatchedCSV(data.columns, data.matched_rows);
+      });
+
+      thinking.appendChild(btn);
+
+      // clear input
+      document.getElementById("userInput").value = "";
+
+      chatBody.scrollTop = chatBody.scrollHeight;
+    } catch (err) {
+      thinking.innerHTML = `<div class="label">Assistant</div><span style="color:#c00;">Network error. Please try again.</span>`;
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+  }
+
+  async function clearChatHistory() {
+  const chatBody = document.getElementById("chatBody");
+
+  // 1) Clear UI immediately
+  chatBody.innerHTML = `
+    <div class="chat-msg">
+      <div class="label">Hi!</div>
+      Ask a question about the reports.
+    </div>
+  `;
+
+  // 2) Clear backend chat history (so it doesn't keep accumulating server-side)
+  try {
+    const res = await fetch("{{ url_for('nchrp_bp.clear_chat_history_nchrp') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Optional: if your route returns JSON
+    // const data = await res.json();
+
+    if (!res.ok) {
+      console.warn("Backend chat clear failed.");
+    }
+  } catch (e) {
+    console.warn("Network error clearing backend chat history.");
+  }
+}
+
+
+  // ----------------------------
+  // Matched CSV download (unchanged)
+  // ----------------------------
+  function downloadMatchedCSV(columns, rows) {
+    if (!columns || !rows) {
+      alert("No matched rows available to download.");
+      return;
+    }
+
+    const csv = [];
+    csv.push(columns.map(csvEscape).join(","));
+
+    rows.forEach((obj) => {
+      const rowArray = columns.map((col) => csvEscape(obj[col] ?? ""));
+      csv.push(rowArray.join(","));
+    });
+
+    const blob = new Blob([csv.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "matched_reports.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // basic HTML escape so users can't inject markup into the chat window
+  function escapeHtml(str) {
+    return (str ?? "")
+      .toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+</script>
+
+<script>
+  window.METRICS_BY_KEY = {{ metrics | tojson }};
+</script>
+
+   
+      <script>
+  window.META_MAP = {{ meta_map | tojson }};
+  window.META_DL_URL_TEMPLATE = "{{ url_for('nchrp_bp.download_metadata', filename='__FILENAME__') }}";
+</script>
+
+  
+
+    <script>
+  // ----------------------------
+  // Drilldown: dropdowns + 2-row detail render
+  // ----------------------------
+
+  function uniq(arr) {
+    return Array.from(
+      new Set(
+        (arr || [])
+          .filter((x) => x !== null && x !== undefined && String(x).trim() !== "")
+          .map((x) => String(x).trim())
+      )
+    );
+  }
+
+  function setOptions(selectEl, options, includeAll = true) {
+    selectEl.innerHTML = '<option value="">Select…</option>';
+    if (includeAll) {
+      const a = document.createElement("option");
+      a.value = "__ALL__";
+      a.textContent = "All";
+      selectEl.appendChild(a);
+    }
+    options.forEach((opt) => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      selectEl.appendChild(o);
+    });
+  }
+
+  // You already have escapeHtml in chat script; this is a safe fallback
+  function escapeHtml(str) {
+    return (str ?? "")
+      .toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const summaryRows = document.querySelectorAll("#tableBody .summary-row");
+
+    summaryRows.forEach((summaryRow) => {
+      const detailRow = summaryRow.nextElementSibling;
+      const key = summaryRow.dataset.key || "";
+
+      const metrics =
+        window.METRICS_BY_KEY && window.METRICS_BY_KEY[key]
+          ? window.METRICS_BY_KEY[key]
+          : [];
+
+      const funcSel = summaryRow.querySelector(".sensorFunctionSelect");
+      const perfSel = summaryRow.querySelector(".performanceMeasureSelect");
+      const viewBtn = summaryRow.querySelector(".toggleDetailsBtn");
+
+      if (!funcSel || !perfSel || !viewBtn || !detailRow) return;
+
+      // Populate Sensor Function options
+      const functions = uniq(metrics.map((m) => m["Sensor Function"]));
+      setOptions(funcSel, functions, true);
+
+      // Start state
+      perfSel.disabled = true;
+      viewBtn.disabled = true;
+
+      funcSel.addEventListener("change", () => {
+        const func = funcSel.value;
+
+        let filtered = metrics;
+        if (func && func !== "__ALL__") {
+          filtered = metrics.filter(
+            (m) => String(m["Sensor Function"] || "").trim() === func
+          );
+        }
+
+        const measures = uniq(filtered.map((m) => m["Performance Measure"]));
+        setOptions(perfSel, measures, true);
+
+        perfSel.disabled = measures.length === 0;
+        viewBtn.disabled = false;
+
+        detailRow.style.display = "none";
+        viewBtn.textContent = "View";
+        summaryRow.classList.remove("is-open");
+      });
+
+      perfSel.addEventListener("change", () => {
+        viewBtn.disabled = !perfSel.value;
+        detailRow.style.display = "none";
+        viewBtn.textContent = "View";
+        summaryRow.classList.remove("is-open");
+      });
+
+      viewBtn.addEventListener("click", () => {
+  const func = funcSel.value;
+  const measure = perfSel.value;
+
+  if (!func || !measure) return;
+
+  const isOpen = detailRow.style.display !== "none";
+  if (isOpen) {
+    detailRow.style.display = "none";
+    viewBtn.textContent = "View";
+    summaryRow.classList.remove("is-open");
+    return;
+  }
+
+  // Title
+  const titleFunc = func === "__ALL__" ? "All Sensor Functions" : func;
+  const titleMeas = measure === "__ALL__" ? "All Performance Measures" : measure;
+
+  const box = detailRow.querySelector(".detail-box");
+  const titleEl = box ? box.querySelector(".detail-title") : null;
+  if (titleEl) titleEl.textContent = `${titleFunc} → ${titleMeas}`;
+
+  // NEW: render grouped blocks when All is chosen
+  const content = detailRow.querySelector(".detail-content");
+  if (!content) {
+    console.error("Missing .detail-content container. Did you add it in HTML?");
+    return;
+  }
+  content.innerHTML = "";
+
+  // helpers
+  const norm = (x) => String(x ?? "").trim();
+
+  function mergeFields(rows) {
+    const merged = {};
+    rows.forEach((r) => {
+      const fields = r["fields"] || {};
+      Object.entries(fields).forEach(([k, v]) => {
+        merged[norm(k)] = v;
+      });
+    });
+    return merged;
+  }
+
+function renderBlock(funcName, pmName, merged, metaHtml) {
+  const fieldNames = Object.keys(merged || {});
+
+  // Build metadata row once
+  const metaLine = `
+    <div style="margin: 6px 0 10px 0; font-size: 12.5px;">
+      <span style="font-weight:700;">Metadata:</span> ${metaHtml || "No"}
+    </div>
+  `;
+
+  // If no fields, show message + metadata line
+  if (!fieldNames.length) {
+    return `
+      <div style="margin-bottom:14px;">
+        <div style="font-weight:700; margin:6px 0; font-size:13px;">
+          ${escapeHtml(funcName)} → ${escapeHtml(pmName)}
+        </div>
+        ${metaLine}
+        <div style="padding:8px; background:#fff; border:1px solid #e5e7eb; border-radius:10px;">
+          No fields available.
+        </div>
+      </div>
+    `;
+  }
+
+  const headRow = fieldNames.map((name) => `<th>${escapeHtml(name)}</th>`).join("");
+  const valRow  = fieldNames.map((name) => `<td>${escapeHtml(String(merged[name] ?? ""))}</td>`).join("");
+
+  return `
+    <div style="margin-bottom:14px;">
+      <div style="font-weight:700; margin:6px 0; font-size:13px;">
+        ${escapeHtml(funcName)} → ${escapeHtml(pmName)}
+      </div>
+
+      ${metaLine}
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#fff;">
+          <thead>
+            <tr style="background:#eef2ff;">
+              ${headRow}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              ${valRow}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+  // Decide which sensor functions to render
+  const funcsToRender =
+    func === "__ALL__"
+      ? uniq(metrics.map((m) => m["Sensor Function"]))
+      : [func];
+
+  // Build blocks in the order: function -> measures (each measure produces 2-row block)
+  let blocks = [];
+
+  funcsToRender.forEach((f) => {
+    const rowsForFunc = metrics.filter(
+      (m) => norm(m["Sensor Function"]) === norm(f)
+    );
+
+    const measuresToRender =
+      measure === "__ALL__"
+        ? uniq(rowsForFunc.map((m) => m["Performance Measure"]))
+        : [measure];
+
+    measuresToRender.forEach((pm) => {
+      const rowsForPair = rowsForFunc.filter(
+        (m) => norm(m["Performance Measure"]) === norm(pm)
+      );
+
+      if (!rowsForPair.length) return;
+
+      const merged = mergeFields(rowsForPair);
+      // ✅ detect the source excel filename for this block
+      const src = norm(rowsForPair[0]?.["__source__"]);
+      const metaFile = (window.META_MAP && src) ? window.META_MAP[src] : null;
+
+      // ✅ build Download link or No
+      let metaHtml = "No";
+      if (metaFile) {
+        const url = (window.META_DL_URL_TEMPLATE || "").replace("__FILENAME__", encodeURIComponent(metaFile));
+        metaHtml = `<a href="${url}" style="
+            display:inline-block;
+            background:#28a745;
+            color:#fff;
+            padding:6px 10px;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:700;
+          ">Download File</a>`;
+      }
+      blocks.push(renderBlock(f, pm, merged, metaHtml));
+    });
+  });
+
+  if (!blocks.length) {
+    content.innerHTML = `<div style="padding:8px;">No rows found.</div>`;
+  } else {
+    content.innerHTML = blocks.join("");
+  }
+
+  detailRow.style.display = "";
+  viewBtn.textContent = "Hide";
+  summaryRow.classList.add("is-open");
+});
+
+    });
+  });
+</script>
+
+  </body>
+</html>

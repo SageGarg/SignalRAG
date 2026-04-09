@@ -1,0 +1,34 @@
+# Environment and Secrets
+.env
+signalverse.pem
+.conda/
+venv/
+env/
+
+# Datasets and Documents
+Data/
+data2/
+dataSet/
+TRB/
+nchrpPdfData/
+nchrp_data/
+sampleData/
+uploads/
+
+# Embeddings
+embeddings/
+
+# Node & Package Manager
+node_modules/
+package.json
+package-lock.json
+
+# Cache and Temporary Files
+__pycache__/
+*.pyc
+.DS_Store
+~$*.xlsx
+.vscode/
+
+# Other project-specific
+pdftoChromadb.ipynb

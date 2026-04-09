@@ -1,0 +1,14 @@
+Flask==3.0.2
+langchain==0.1.13
+openpyxl==3.1.2
+pandas==2.2.1
+tiktoken
+chromadb
+pyPdf
+#installing tailwind
+npm install -D tailwindcss
+npx tailwindcss init
+#installing mysql
+mysql-connector-python
+
+

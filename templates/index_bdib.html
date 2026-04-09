@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}BDIB Home{% endblock %}
+
+{% block content %}
+<div class="glass-container">
+  <h1>BDIB: Organic Farming</h1>
+  <p>Search organic farming insights—ask questions and get answers automatically synthesized.</p>
+
+  <form action="{{ url_for('bdib_bp.answer_bdib') }}" method="post">
+    <div class="input-group">
+      <label for="user_question">Name</label>
+      <input type="text" id="user_question" placeholder="Enter your name here..." name="user_question" required />
+    </div>
+    <div class="input-group">
+      <label for="user_email">E-mail</label>
+      <input type="email" id="user_email" placeholder="Enter your e-mail here..." name="user_email" required />
+    </div>
+    <button type="submit" class="btn">Enter</button>
+  </form>
+</div>
+{% endblock %}
