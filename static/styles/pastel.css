@@ -100,6 +100,11 @@ body {
   max-width: 900px;
 }
 
+.glass-container.extra-wide {
+  max-width: 90%;
+  width: 90%;
+}
+
 /* Typography */
 h1 {
   font-size: 2.5rem;

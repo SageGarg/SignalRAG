@@ -205,7 +205,8 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
         group_cols = ["__key__", "Sensor Function", "Performance Measure"]
         keep_cols = [
             "__key__", "Sensor Function", "Performance Measure",
-            "Field Name", "Field Value", "__source__", "__sheet__"
+            "Field Name", "Field Value", "__source__", "__sheet__",
+            "Testing Notes (optional)"
         ]
         keep_cols = [c for c in keep_cols if c in df.columns]
 
@@ -228,10 +229,18 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
                 if fname:
                     fields[fname] = fval  # last wins
 
+            notes = ""
+            if "Testing Notes (optional)" in g.columns:
+                notes_s = g["Testing Notes (optional)"].dropna()
+                if not notes_s.empty:
+                    notes = notes_s.iloc[0]
+
             metrics_by_key.setdefault(k, []).append({
                 "Sensor Function": sf,
                 "Performance Measure": pm,
                 "fields": fields,
+                "ordered_fields": list(fields.keys()),
+                "Testing Notes": norm_str(notes),
                 "__source__": g.iloc[0].get("__source__"),
                 "__sheet__": g.iloc[0].get("__sheet__"),
             })
@@ -269,6 +278,9 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
 
     @nchrp_bp.route("/go_to_clearinghouse", methods=["GET"])
     def go_to_clearinghouse():
+        if "user_email" not in session:
+            flash("Please log in first.")
+            return redirect(url_for("nchrp_bp.index_nchrp"))
         return render_template("answer_nchrp.html", user_name=session.get("user_name", ""))
 
     @nchrp_bp.route("/submit_question_nchrp", methods=["POST"])
@@ -319,6 +331,9 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
 
     @nchrp_bp.route("/report")
     def testSampleReport():
+        if "user_email" not in session:
+            flash("Please log in first.")
+            return redirect(url_for("nchrp_bp.index_nchrp"))
         tests, metrics = load_nchrp_from_files()
         meta_map = load_meta_index()
         return render_template(
@@ -338,6 +353,11 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
             path="template.xlsx",
             as_attachment=True
         )
+
+    @nchrp_bp.route("/download-source-file/<path:filename>")
+    def download_source_file(filename):
+        sample_dir = os.path.join(current_app.root_path, "sampleData")
+        return send_from_directory(sample_dir, filename, as_attachment=True)
 
     
     def _ext(name: str) -> str:
@@ -454,6 +474,11 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
     def download_metadata(filename):
         upload_dir = os.path.join(current_app.root_path, "uploads")
         meta_dir = os.path.join(upload_dir, "metadata")
+        return send_from_directory(meta_dir, filename, as_attachment=True)
+
+    @nchrp_bp.route("/download-user-metadata/<path:filename>")
+    def download_user_metadata(filename):
+        meta_dir = os.path.join(current_app.root_path, "sampleData", "metadata")
         return send_from_directory(meta_dir, filename, as_attachment=True)
 
     def folder_fingerprint_sampledata() -> str:
@@ -712,9 +737,32 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
 
         # Flatten matched rows for CSV download feature
         matched_flat_rows = [r for r in ASKAI_CACHE.get("flat_rows", []) if r.get("__key__") in keys]
+        
+        # Filter down to only files that the AI *actually* cited in the text
+        cited_flat_rows = []
+        for r in matched_flat_rows:
+            t_id = norm_str(r.get("Test ID"))
+            # Case-insensitive substring match of the Test ID in the AI's answer
+            if t_id and t_id.lower() in answer.lower():
+                cited_flat_rows.append(r)
+        
+        # Fallback: if the AI didn't cite any explicit ID, return all matched candidates
+        if not cited_flat_rows:
+            cited_flat_rows = matched_flat_rows
+
+        def find_meta_file(test_id_str):
+            if not test_id_str: return None
+            meta_dir = os.path.join(current_app.root_path, "sampleData", "metadata")
+            if not os.path.exists(meta_dir): return None
+            for fn in os.listdir(meta_dir):
+                if fn.startswith("~$") or fn.startswith("."): continue
+                if fn.lower().startswith(test_id_str.lower()):
+                    return fn
+            return None
+
         csv_rows = []
         all_cols_set = set()
-        for r in matched_flat_rows:
+        for r in cited_flat_rows:
             flat_r = {}
             for k, v in r.items():
                 if k == "fields" and isinstance(v, dict):
@@ -724,9 +772,17 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
                 elif k != "__key__":
                     flat_r[k] = norm_str(v)
                     all_cols_set.add(k)
+            
+            notes = norm_str(r.get("Testing Notes", "")).lower()
+            if "yes" in notes:
+                mfile = find_meta_file(flat_r.get("Test ID"))
+                if mfile:
+                    flat_r["__metadata_file__"] = mfile
+                    all_cols_set.add("__metadata_file__")
+
             csv_rows.append(flat_r)
         
-        base_cols = ["Test ID", "Sensor Technology", "Vendor Name", "Sensor model name", "Stage & Level", "Test Center", "Sensor Function", "Performance Measure", "__source__", "__sheet__"]
+        base_cols = ["Test ID", "Sensor Technology", "Vendor Name", "Sensor model name", "Stage & Level", "Test Center", "Sensor Function", "Performance Measure", "__source__", "__sheet__", "__metadata_file__"]
         columns = [c for c in base_cols if c in all_cols_set] + sorted([c for c in all_cols_set if c not in base_cols])
 
         out = {
