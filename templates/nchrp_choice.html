@@ -52,14 +52,14 @@
 
 <div class="glass-container wide" style="max-width: 800px;">
   <h2>Welcome, {{ user_name }}!</h2>
-  <p style="margin-bottom: 0;">User Type: <strong>{{ user_role }}</strong></p>
-  <p>Please choose one of the following options:</p>
+  <p style="margin-bottom: 0;">User Role: <strong>{{ user_role }}</strong></p>
+  <p>Select how you would like to explore the Clearinghouse:</p>
 
   <div class="card-container">
     <div class="card">
       <img src="{{ url_for('static', filename='Image/chatbot.jpg') }}" alt="Traffic Sensor Clearinghouse" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'" />
       <h3>🤖 Traffic Sensor Clearinghouse</h3>
-      <p>Chat with the AI-powered assistant to access document-based and open-source traffic sensor insights.</p>
+      <p>Ask questions and get answers from reports, standards, and testing documents</p>
       <form action="{{ url_for('nchrp_bp.go_to_clearinghouse') }}" method="get">
         <button type="submit" class="btn">Open Chatbot</button>
       </form>
@@ -68,9 +68,9 @@
     <div class="card">
       <img src="{{ url_for('static', filename='Image/reports.jpg') }}" alt="Reports Section" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'" />
       <h3>📊 Sensor Test Results</h3>
-      <p>Browse detailed test reports by state, year, and sensor type, featuring parsed NCHRP Stage 1 results.</p>
+      <p>Explore and compare the sensor test results</p>
       <form action="{{ url_for('nchrp_bp.testSampleReport') }}" method="get">
-        <button type="submit" class="btn">View Reports</button>
+        <button type="submit" class="btn">View Data</button>
       </form>
     </div>
   </div>

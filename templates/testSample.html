@@ -129,7 +129,7 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         transform: translateY(-2px);
       }
-      button.primary-btn {
+      .primary-btn {
         background: var(--text-dark);
         color: white;
         border: none;
@@ -139,8 +139,10 @@
         font-family: inherit;
         cursor: pointer;
         transition: 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
       }
-      button.primary-btn:hover {
+      .primary-btn:hover {
         background: #2a4d7c;
         transform: translateY(-2px);
       }
@@ -536,8 +538,10 @@
       <div class="actions-bar">
         <div style="display: flex; gap: 8px;">
           <a href="{{ url_for('nchrp_bp.download_template') }}" class="secondary-btn">Download Template</a>
-          <button type="button" onclick="downloadTableAsCSV()" class="primary-btn">Download CSV</button>
-          <button type="button" onclick="openUploadModal()" class="primary-btn" style="background:#555;">Upload CSV</button>
+          <a href="{{ url_for('nchrp_bp.download_all_data') }}" class="primary-btn">Download Data</a>
+          {% if user_role != 'public' %}
+          <button type="button" onclick="openUploadModal()" class="primary-btn" style="background:#555;">Upload Data</button>
+          {% endif %}
         </div>
         <button onclick="resetFilters()" class="danger-btn">Reset Filters</button>
       </div>
@@ -637,7 +641,7 @@
 
 <div id="chatWidget" class="chat-widget" aria-hidden="true">
   <div class="chat-header">
-    <div class="title">Report Assistant 🤖</div>
+    <div class="title">Data Assistant 🤖</div>
     <div class="actions">
       <button type="button" onclick="clearChatHistory()">Clear</button>
       <button type="button" onclick="toggleChat(false)">—</button>
@@ -649,7 +653,7 @@
   <div id="chatBody" class="chat-body">
     <div class="chat-msg">
       <div class="label">Hi!</div>
-      Ask a question about the reports.
+      Ask a question about the data.
     </div>
   </div>
 
@@ -1087,7 +1091,7 @@
     });
 
     metadataDocs.forEach(meta => {
-      const url = "{{ url_for('nchrp_bp.download_user_metadata', filename='') }}" + meta;
+      const url = "{{ url_for('nchrp_bp.download_metadata', filename='') }}" + meta;
       const link = document.createElement("a");
       link.style.display = "none";
       link.href = url;
@@ -1350,14 +1354,24 @@ function renderBlock(funcName, pmName, mergedData, metaHtml) {
       if (!rowsForPair.length) return;
 
       const merged = mergeFields(rowsForPair);
-      // ✅ detect the source excel filename for this block
-      const src = norm(rowsForPair[0]?.["__source__"]);
-      const metaFile = (window.META_MAP && src) ? window.META_MAP[src] : null;
+      // ✅ Check if testing notes are requested
+      const notesValue = norm(rowsForPair[0]?.["Testing Notes (optional)"] || rowsForPair[0]?.["Testing Notes"] || "");
+      const testingNotesYes = notesValue.toLowerCase() === "yes";
+      
+      // ✅ get Test ID from key (which is stored in the summaryRow data attribute)
+      const testId = (key || "").split("||")[0].toLowerCase();
+      
+      // ✅ get mapped files
+      const metaFiles = window.META_MAP ? window.META_MAP[testId] : null;
+      const hasMetaFile = metaFiles && metaFiles.length > 0;
 
       // ✅ build Download link or No
       let metaHtml = "No";
-      if (metaFile) {
-        const url = (window.META_DL_URL_TEMPLATE || "").replace("__FILENAME__", encodeURIComponent(metaFile));
+      
+      if (hasMetaFile) {
+        // Just link the first matched file
+        const firstFile = metaFiles[0];
+        const url = (window.META_DL_URL_TEMPLATE || "").replace("__FILENAME__", encodeURIComponent(firstFile));
         metaHtml = `<a href="${url}" style="
             display:inline-block;
             background:#28a745;
@@ -1367,6 +1381,8 @@ function renderBlock(funcName, pmName, mergedData, metaHtml) {
             text-decoration:none;
             font-weight:700;
           ">Download File</a>`;
+      } else if (testingNotesYes) {
+        metaHtml = `<span style="color:#d9534f; font-weight:700;">Missing file</span>`;
       }
       blocks.push(renderBlock(f, pm, merged, metaHtml));
     });

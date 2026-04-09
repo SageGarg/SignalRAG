@@ -23,7 +23,7 @@
       {% if 'bdib' in request.path %}
       <span>Organic Farming</span> Dashboard
       {% elif 'nchrp' in request.path %}
-      <span>Transportation</span> Clearinghouse
+      <span>Intelligent Traffic </span> Sensor Clearinghouse
       {% else %}
       <span>Traffic Signals</span> Dashboard
       {% endif %}
@@ -33,8 +33,8 @@
     <div class="nav-links">
       {% if 'nchrp' in request.path %}
         {% if request.endpoint not in ['nchrp_bp.index_nchrp', 'nchrp_bp.answer_nchrp'] %}
-          <a href="{{ url_for('nchrp_bp.go_to_clearinghouse') }}" class="nav-link {% if 'go_to_clearinghouse' in request.path or 'result' in request.path %}active{% endif %}">AI Chat</a>
-          <a href="{{ url_for('nchrp_bp.testSampleReport') }}" class="nav-link {% if 'report' in request.path %}active{% endif %}">Reports</a>
+          <a href="{{ url_for('nchrp_bp.go_to_clearinghouse') }}" class="nav-link {% if 'go_to_clearinghouse' in request.path or 'result' in request.path %}active{% endif %}">Knowledge Assistant</a>
+          <a href="{{ url_for('nchrp_bp.testSampleReport') }}" class="nav-link {% if 'report' in request.path %}active{% endif %}">Data Explorer</a>
         {% endif %}
       {% endif %}
     </div>

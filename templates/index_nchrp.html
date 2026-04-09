@@ -51,8 +51,8 @@ select:focus {
 {% endwith %}
 
 <div class="glass-container">
-  <h1>Traffic Sensor Clearinghouse</h1>
-  <p>Access NCHRP insights, reports, and AI assistance.</p>
+  <h1>Intelligent Traffic Sensor Clearinghouse</h1>
+  <p>Access sensor testing data, reports, and AI-powered insights.</p>
 
   <form action="{{ url_for('nchrp_bp.answer_nchrp') }}" method="post">
     <div class="input-group">
@@ -66,7 +66,7 @@ select:focus {
     </div>
 
     <div class="input-group">
-        <label for="user_role">User Type</label>
+        <label for="user_role">User Role</label>
         <select name="user_role" id="user_role" required>
           <option value="">Select User Role</option>
           <option value="public">Public User</option>

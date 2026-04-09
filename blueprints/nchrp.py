@@ -1,9 +1,9 @@
 from flask import (
     Blueprint, render_template, request, session, jsonify,
-    redirect, url_for, flash, current_app, send_from_directory
+    redirect, url_for, flash, current_app, send_from_directory, send_file
 )
 from typing import List, Dict, Tuple, Any 
-import os, re, json, time, hashlib, math
+import os, re, json, time, hashlib, math, io, zipfile
 import numpy as np
 import pandas as pd
 from werkzeug.utils import secure_filename
@@ -105,59 +105,64 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
         return v
 
     def load_nchrp_from_files():
-        DATA_DIR = os.path.join(current_app.root_path, "sampleData")
+        sample_dir = os.path.join(current_app.root_path, "sampleData")
+        upload_excel_dir = os.path.join(current_app.root_path, "uploads", "excel")
         frames = []
-        if not os.path.isdir(DATA_DIR):
-            return [], {}
-
-        for fn in os.listdir(DATA_DIR):
-            if fn.startswith("~$") or fn.startswith("."):
+        
+        directories_to_scan = [sample_dir, upload_excel_dir]
+        
+        for data_dir in directories_to_scan:
+            if not os.path.isdir(data_dir):
                 continue
-            path = os.path.join(DATA_DIR, fn)
-            if not os.path.isfile(path):
-                continue
-            ext = os.path.splitext(fn)[1].lower()
 
-            try:
-                if ext == ".csv":
-                    df = pd.read_csv(path, dtype=object)
-                    df.columns = [_norm_col(c) for c in df.columns]
-                    df["__source__"] = fn
-                    df["__sheet__"] = None
-                    frames.append(df)
+            for fn in os.listdir(data_dir):
+                if fn.startswith("~$") or fn.startswith("."):
+                    continue
+                path = os.path.join(data_dir, fn)
+                if not os.path.isfile(path):
+                    continue
+                ext = os.path.splitext(fn)[1].lower()
 
-                elif ext == ".xlsx":
-                    xls = pd.ExcelFile(path, engine="openpyxl")
-                    for sheet in xls.sheet_names:
-                        s = pd.read_excel(xls, sheet_name=sheet, dtype=object)
-                        s.columns = [_norm_col(c) for c in s.columns]
-                        s = s.loc[:, ~s.columns.astype(str).str.startswith("Unnamed")]
-                        s = s.where(pd.notnull(s), None)
+                try:
+                    if ext == ".csv":
+                        df = pd.read_csv(path, dtype=object)
+                        df.columns = [_norm_col(c) for c in df.columns]
+                        df["__source__"] = fn
+                        df["__sheet__"] = None
+                        frames.append(df)
 
-                        for c in s.columns:
-                            if s[c].dtype == object:
-                                s[c] = s[c].apply(lambda x: x.strip() if isinstance(x, str) else x)
+                    elif ext == ".xlsx":
+                        xls = pd.ExcelFile(path, engine="openpyxl")
+                        for sheet in xls.sheet_names:
+                            s = pd.read_excel(xls, sheet_name=sheet, dtype=object)
+                            s.columns = [_norm_col(c) for c in s.columns]
+                            s = s.loc[:, ~s.columns.astype(str).str.startswith("Unnamed")]
+                            s = s.where(pd.notnull(s), None)
 
-                        s = s.dropna(how="all")
-                        if s.empty:
-                            continue
+                            for c in s.columns:
+                                if s[c].dtype == object:
+                                    s[c] = s[c].apply(lambda x: x.strip() if isinstance(x, str) else x)
 
-                        for col in ["Test ID", "Sensor Function","Performance Measure", "Stage & Level"]:
-                            if col in s.columns:
-                                s[col] = s[col].replace("", None).ffill()
+                            s = s.dropna(how="all")
+                            if s.empty:
+                                continue
 
-                        if "Stage & Level" not in s.columns or s["Stage & Level"].isna().all():
-                            continue
-                        if "Test ID" not in s.columns or s["Test ID"].isna().all():
-                            continue
+                            for col in ["Test ID", "Sensor Function","Performance Measure", "Stage & Level"]:
+                                if col in s.columns:
+                                    s[col] = s[col].replace("", None).ffill()
 
-                        s["__source__"] = fn
-                        s["__sheet__"] = sheet
-                        frames.append(s)
+                            if "Stage & Level" not in s.columns or s["Stage & Level"].isna().all():
+                                continue
+                            if "Test ID" not in s.columns or s["Test ID"].isna().all():
+                                continue
 
-            except Exception as e:
-                print(f"[WARN] Skipping file {fn}: {e}")
-                continue
+                            s["__source__"] = fn
+                            s["__sheet__"] = sheet
+                            frames.append(s)
+
+                except Exception as e:
+                    print(f"[WARN] Skipping file {fn}: {e}")
+                    continue
 
         if not frames:
             return [], {}
@@ -346,6 +351,37 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
             user_name=session.get("user_name", "")
         )
 
+    @nchrp_bp.route("/download-all-data")
+    def download_all_data():
+        sample_dir = os.path.join(current_app.root_path, "sampleData")
+        upload_dir = os.path.join(current_app.root_path, "uploads")
+        
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+            # zip sampleData
+            for root, dirs, files in os.walk(sample_dir):
+                for f in files:
+                    if f.startswith("~$") or f.startswith("."): continue
+                    file_path = os.path.join(root, f)
+                    arcname = os.path.relpath(file_path, current_app.root_path)
+                    zf.write(file_path, arcname)
+            # zip uploads
+            if os.path.exists(upload_dir):
+                for root, dirs, files in os.walk(upload_dir):
+                    for f in files:
+                        if f.startswith("~$") or f.startswith("."): continue
+                        file_path = os.path.join(root, f)
+                        arcname = os.path.relpath(file_path, current_app.root_path)
+                        zf.write(file_path, arcname)
+
+        memory_file.seek(0)
+        return send_file(
+            memory_file,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name="nchrp_dataset.zip"
+        )
+
     @nchrp_bp.route("/download-template")
     def download_template():
         return send_from_directory(
@@ -363,38 +399,41 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
     def _ext(name: str) -> str:
       return os.path.splitext(name)[1].lower()
     
-    def meta_index_path():
-        upload_dir = os.path.join(current_app.root_path, "uploads")
-        meta_dir = os.path.join(upload_dir, "metadata")
-        os.makedirs(meta_dir, exist_ok=True)
-        return os.path.join(meta_dir, "index.json")
-
     def load_meta_index() -> dict:
-        p = meta_index_path()
-        if not os.path.isfile(p):
-            return {}
-        try:
-            with open(p, "r", encoding="utf-8") as f:
-                return json.load(f) or {}
-        except Exception:
-            return {}
+        meta_map = {}
+        sample_meta_dir = os.path.join(current_app.root_path, "sampleData", "metadata")
+        upload_meta_dir = os.path.join(current_app.root_path, "uploads", "metadata")
+        
+        for d in [sample_meta_dir, upload_meta_dir]:
+            if os.path.isdir(d):
+                for fn in os.listdir(d):
+                    if fn.startswith(".") or fn.startswith("~"): continue
+                    # Extract Test ID from prefix (e.g. CAL-016_metadata.pdf -> CAL-016)
+                    parts = fn.split("_")
+                    if len(parts) > 1:
+                        test_id = parts[0]
+                    else:
+                        test_id = fn.split(".")[0]
+                    
+                    test_id_lower = test_id.lower()
+                    if test_id_lower not in meta_map:
+                        meta_map[test_id_lower] = []
+                    meta_map[test_id_lower].append(fn)
 
-    def save_meta_index(d: dict) -> None:
-        p = meta_index_path()
-        with open(p, "w", encoding="utf-8") as f:
-            json.dump(d, f, indent=2)
+        return meta_map
+
+
 
 
 
 
     @nchrp_bp.route("/upload_report", methods=["POST"])
     def upload_report():
-      sample_dir = os.path.join(current_app.root_path, "sampleData")
       upload_dir = os.path.join(current_app.root_path, "uploads")
+      excel_dir = os.path.join(upload_dir, "excel")
       meta_dir = os.path.join(upload_dir, "metadata")
 
-      os.makedirs(sample_dir, exist_ok=True)
-      os.makedirs(upload_dir, exist_ok=True)
+      os.makedirs(excel_dir, exist_ok=True)
       os.makedirs(meta_dir, exist_ok=True)
 
       report = request.files.get("report_file")
@@ -410,27 +449,46 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
           flash("Report file must be .xlsx or .csv.")
           return redirect(url_for("nchrp_bp.testSampleReport"))
 
-      # Save report into sampleData (so it shows on the report page)
-      report_path = os.path.join(sample_dir, report_name)
+      # Save report into uploads/excel
+      report_path = os.path.join(excel_dir, report_name)
       report.save(report_path)
 
       # --- optional metadata file ---
+      uploaded_meta_name = None
       if meta and meta.filename:
           meta_name = secure_filename(meta.filename)
           if _ext(meta_name) not in ALLOWED_META_EXT:
               flash("Metadata file type not supported. Try PDF/DOC/DOCX/TXT/Images.")
               return redirect(url_for("nchrp_bp.testSampleReport"))
 
-          # store with timestamp to avoid overwriting
-          ts = time.strftime("%Y%m%d-%H%M%S")
-          saved_meta_filename = f"{ts}__{meta_name}"
-          meta_path = os.path.join(meta_dir, saved_meta_filename)
+          # Save meta file with TestID naming convention intact
+          meta_path = os.path.join(meta_dir, meta_name)
           meta.save(meta_path)
+          uploaded_meta_name = meta_name
 
+      # --- audit log to record uploader ---
+      log_path = os.path.join(upload_dir, "upload_log.json")
+      logs = []
+      if os.path.exists(log_path):
+          try:
+              with open(log_path, "r") as f:
+                  logs = json.load(f)
+          except Exception:
+              pass
+      
+      logs.append({
+          "timestamp": datetime.now().isoformat(),
+          "uploader_email": session.get("user_email", "unknown"),
+          "uploader_name": session.get("user_name", "unknown"),
+          "report_file": report_name,
+          "metadata_file": uploaded_meta_name
+      })
 
-          idx = load_meta_index()
-          idx[report_name] = saved_meta_filename
-          save_meta_index(idx)
+      try:
+          with open(log_path, "w") as f:
+              json.dump(logs, f, indent=2)
+      except Exception as e:
+          print(f"Failed to write upload log: {e}")
 
       flash("Upload successful!")
       return redirect(url_for("nchrp_bp.testSampleReport"))
@@ -472,35 +530,39 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
 
     @nchrp_bp.route("/download-metadata/<path:filename>")
     def download_metadata(filename):
-        upload_dir = os.path.join(current_app.root_path, "uploads")
-        meta_dir = os.path.join(upload_dir, "metadata")
-        return send_from_directory(meta_dir, filename, as_attachment=True)
-
-    @nchrp_bp.route("/download-user-metadata/<path:filename>")
-    def download_user_metadata(filename):
-        meta_dir = os.path.join(current_app.root_path, "sampleData", "metadata")
-        return send_from_directory(meta_dir, filename, as_attachment=True)
+        upload_meta_dir = os.path.join(current_app.root_path, "uploads", "metadata")
+        sample_meta_dir = os.path.join(current_app.root_path, "sampleData", "metadata")
+        if os.path.isfile(os.path.join(upload_meta_dir, filename)):
+            return send_from_directory(upload_meta_dir, filename, as_attachment=True)
+        if os.path.isfile(os.path.join(sample_meta_dir, filename)):
+            return send_from_directory(sample_meta_dir, filename, as_attachment=True)
+        return "Metadata file not found", 404
 
     def folder_fingerprint_sampledata() -> str:
-        """Hash filenames + mtime + size for all supported files in sampleData."""
-        data_dir = os.path.join(current_app.root_path, "sampleData")
+        """Hash filenames + mtime + size for all supported files in both directories."""
+        data_dirs = [
+            os.path.join(current_app.root_path, "sampleData"),
+            os.path.join(current_app.root_path, "uploads", "excel")
+        ]
         h = hashlib.sha256()
-        if not os.path.isdir(data_dir):
-            return "NO_DIR"
-        for fname in sorted(os.listdir(data_dir)):
-            if fname.startswith("~$") or fname.startswith("."):
+        
+        for data_dir in data_dirs:
+            if not os.path.isdir(data_dir):
                 continue
-            ext = os.path.splitext(fname)[1].lower()
-            if ext not in [".xlsx", ".csv"]:
-                continue
-            fp = os.path.join(data_dir, fname)
-            try:
-                st = os.stat(fp)
-            except OSError:
-                continue
-            h.update(fname.encode("utf-8"))
-            h.update(str(st.st_mtime_ns).encode("utf-8"))
-            h.update(str(st.st_size).encode("utf-8"))
+            for fname in sorted(os.listdir(data_dir)):
+                if fname.startswith("~$") or fname.startswith("."):
+                    continue
+                ext = os.path.splitext(fname)[1].lower()
+                if ext not in [".xlsx", ".csv"]:
+                    continue
+                fp = os.path.join(data_dir, fname)
+                try:
+                    st = os.stat(fp)
+                except OSError:
+                    continue
+                h.update(fname.encode("utf-8"))
+                h.update(str(st.st_mtime_ns).encode("utf-8"))
+                h.update(str(st.st_size).encode("utf-8"))
         return h.hexdigest()
 
     def norm_str(x) -> str:

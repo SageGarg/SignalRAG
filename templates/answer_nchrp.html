@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="glass-container wide">
-  <h1>Transportation Assistant Chat</h1>
+  <h1>Traffic Sensor Knowledge Assistant</h1>
 
   <div class="chat-container" id="the_content">
     {% if chat_history %}
@@ -69,7 +69,7 @@
 
   <!-- New Question Form -->
   <form action="{{ url_for('nchrp_bp.submit_question_nchrp') }}" method="post" style="margin-top: 2rem; display: flex; gap: 10px;">
-    <input type="text" id="user_input" name="quesInput" required autocomplete="off" placeholder="Ask another question..." style="flex-grow: 1; margin: 0; border: none; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" />
+    <input type="text" id="user_input" name="quesInput" required autocomplete="off" placeholder="Ask a question about sensor testing..." style="flex-grow: 1; margin: 0; border: none; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" />
     <button type="submit" class="btn" style="width: auto; padding: 0 20px;">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="22" y1="2" x2="11" y2="13"></line>
