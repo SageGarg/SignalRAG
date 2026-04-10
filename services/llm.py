@@ -119,7 +119,10 @@ def rerank_docs(question, docs, top_n=4):
             score = 5
         reranked.append((score, doc))
     reranked.sort(key=lambda x: x[0], reverse=True)
-    return [doc for _, doc in reranked[:top_n]]
+    
+    # Only return documents that are actually somewhat relevant to the question!
+    # Conversational questions (e.g. "hi there") will yield scores of 1, effectively clearing out irrelevant citations.
+    return [doc for score, doc in reranked if score >= 4][:top_n]
 
 def answer_question(question, vectorstore, chat_history=None, top_n=4):
     retriever = vectorstore.as_retriever(

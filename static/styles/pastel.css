@@ -39,7 +39,7 @@ body {
 }
 
 .nav-brand {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   text-decoration: none;
   background: linear-gradient(45deg, var(--text-dark), var(--text-light));
@@ -48,6 +48,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .nav-brand span {
@@ -199,10 +200,11 @@ input[type="email"]:focus {
 }
 
 .chat-answer {
-  background: var(--text-dark);
-  color: white;
+  background: white;
+  color: var(--text-dark);
+  border-left: 5px solid #2a4d7c;
   border-radius: 16px 16px 16px 0;
-  box-shadow: 0 4px 15px rgba(29, 53, 87, 0.2);
+  box-shadow: 0 4px 15px rgba(29, 53, 87, 0.08);
 }
 
 .chat-answer h4, .chat-question h4 {
@@ -214,7 +216,7 @@ input[type="email"]:focus {
 }
 
 .chat-answer h4 {
-  color: var(--primary-color);
+  color: var(--text-dark);
 }
 
 .chat-question h4 {

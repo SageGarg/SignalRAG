@@ -279,7 +279,19 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
         session["user_email"] = user_email
         chat_history.clear()
 
-        return render_template("nchrp_choice.html", user_name=user_name, user_email=user_email, user_role=user_role)
+        return redirect(url_for("nchrp_bp.choices"))
+
+    @nchrp_bp.route("/choices", methods=["GET"])
+    def choices():
+        if "user_email" not in session:
+            flash("Please log in first.")
+            return redirect(url_for("nchrp_bp.index_nchrp"))
+        return render_template(
+            "nchrp_choice.html", 
+            user_name=session.get("user_name", ""), 
+            user_email=session.get("user_email", ""), 
+            user_role=session.get("user_role", "")
+        )
 
     @nchrp_bp.route("/go_to_clearinghouse", methods=["GET"])
     def go_to_clearinghouse():
@@ -303,7 +315,7 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
         vectorstore = vectorstores["nchrp"]
         answer, sources = answer_question(ques_input, vectorstore)
 
-        prompt = f"In context of transportation answer this: {ques_input}\n What is the answer and provide meta of the answer in the next line:"
+        prompt = f"In context of transportation answer this: {ques_input}"
         ChipAnswerText = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}]
@@ -849,23 +861,94 @@ def create_nchrp_blueprint(*, vectorstores, answer_question, client, allowed_ema
 
         out = {
             "answer": answer,
-            "matched_tests": evidence,  # tiered output
-            "columns": columns,
-            "matched_rows": csv_rows
+            "matched_tests": [], # not needed for UI snippet
+            "debug": {"keys": keys} if debug else None,
+            "matched_rows": csv_rows,
+            "columns": columns
         }
-
-        if debug:
-            out["debug"] = {
-                "matched_keys": keys,
-                "cache_fingerprint": ASKAI_CACHE["fingerprint"],
-                "cache_built_at": ASKAI_CACHE["built_at"],
-                "top_k_keys": TOP_K_KEYS,
-                "top_k_rows": TOP_K_ROWS,
-                "sim_threshold": SIM_THRESHOLD,
-            }
 
         return jsonify(out)
 
 
+
+    @nchrp_bp.route("/unified_chat", methods=["GET"])
+    def unified_chat():
+        if "user_email" not in session:
+            flash("Please log in first.")
+            return redirect(url_for("nchrp_bp.index_nchrp"))
+        return render_template("unified_chat.html", user_name=session.get("user_name", ""))
+
+    @nchrp_bp.route("/ask_unified_ai", methods=["POST"])
+    def ask_unified_ai():
+        payload = request.json or {}
+        question = norm_str(payload.get("question", ""))
+        
+        if not question:
+            return jsonify({"error": "No question provided"}), 400
+
+        # --- 1) Fetch Excel Data ---
+        try:
+            keys = cosine_topk_keys(question)
+        except Exception as e:
+            print(f"[ERROR] Excel AI keys failed: {e}")
+            keys = []
+
+        tests = ASKAI_CACHE.get("tests", [])
+        metrics_by_key = ASKAI_CACHE.get("metrics_by_key", {})
+        excel_evidence = []
+        if keys:
+            excel_evidence = [tiered_json_for_key(k, tests, metrics_by_key) for k in keys]
+            
+        # --- 2) Fetch PDF Data ---
+        vectorstore_nchrp = vectorstores.get("nchrp")
+        pdf_texts = []
+        if vectorstore_nchrp:
+            try:
+                retriever = vectorstore_nchrp.as_retriever(search_type="mmr", search_kwargs={"k": 5})
+                docs = retriever.invoke(question)
+                for d in docs:
+                    src = os.path.basename(d.metadata.get("source", "Unknown"))
+                    page = d.metadata.get("page")
+                    if page is not None:
+                        src += f" (page {page+1})"
+                    pdf_texts.append(f"Source: {src}\n{d.page_content}")
+            except Exception as e:
+                print(f"[ERROR] PDF Vectorstore fetching failed: {e}")
+
+        # --- 3) Synthesize Prompt ---
+        excel_content = json.dumps(excel_evidence, indent=2) if excel_evidence else "No relevant test results found in Excel datastore."
+        pdf_content = "\n\n".join(pdf_texts) if pdf_texts else "No text snippets found from the PDF documentation."
+
+        prompt = f"""
+    You are an expert NCHRP assistant answering questions using information from two completely separate datastores simultaneously. 
+    You must synthesize these together effectively.
+
+    User question:
+    {question}
+
+    --- EXCEL SENSOR TESTING DATA (Structured JSON grouped by Sensor Function) ---
+    {excel_content}
+
+    --- QUALITATIVE NCHRP PDF DOCUMENTATION ---
+    {pdf_content}
+
+    Rules:
+    - Answer ONLY using facts present in the text or JSON above.
+    - If the answer cannot be determined, reply explicitly.
+    - Please cite your sources structurally.
+    """.strip()
+
+        reply = client.chat.completions.create(
+            model=CHAT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0
+        )
+        answer = norm_str(reply.choices[0].message.content) or "I don't know."
+        
+        return jsonify({
+            "answer": answer,
+            "has_excel": len(excel_evidence) > 0,
+            "has_pdf": len(pdf_texts) > 0
+        })
 
     return nchrp_bp

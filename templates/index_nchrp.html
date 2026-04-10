@@ -3,45 +3,263 @@
 
 {% block content %}
 <style>
+/* Reset and Premium Overrides specifically for this page */
+body {
+  background: radial-gradient(circle at center, #0B132B 0%, #050A15 100%) !important;
+  color: #fff !important;
+  overflow-x: hidden;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Let's hide the decorative pastel shapes from pastel.css for this specific page */
+.bg-shape {
+  display: none !important;
+}
+
+/* Mesh gradient glowing orbs for dark mode */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: -1;
+  animation: float 10s infinite ease-in-out alternate;
+}
+
+.orb.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: rgba(0, 212, 255, 0.15);
+  top: -100px;
+  left: -100px;
+}
+
+.orb.orb-2 {
+  width: 600px;
+  height: 600px;
+  background: rgba(111, 0, 255, 0.15);
+  bottom: -200px;
+  right: -100px;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(40px, -40px) scale(1.1); }
+}
+
+/* Layout */
+.hero-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4rem;
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px); /* minus navbar */
+}
+
+@media (min-width: 900px) {
+  .hero-wrapper {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* Left Column */
+.hero-text {
+  flex: 1;
+  max-width: 550px;
+  animation: slideFadeIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+.hero-text h1 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 800;
+  margin: 0 0 1.5rem 0;
+  background: linear-gradient(135deg, #ffffff 0%, #a0a5b5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+}
+
+.hero-text p {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #8f9bb3 !important;
+  margin-bottom: 2rem;
+}
+
+/* Right Column - The Form */
+.hero-form-container {
+  flex: 1;
+  width: 100%;
+  max-width: 480px;
+  animation: slideFadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+  opacity: 0;
+}
+
+.premium-glass-card {
+  background: rgba(16, 23, 41, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle glow inside card */
+.premium-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+  opacity: 0.6;
+}
+
+/* Form Groups */
+.premium-input-group {
+  margin-bottom: 1.8rem;
+  text-align: left;
+}
+
+.premium-input-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  color: #c5d0e6 !important;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.premium-input-group input,
+.premium-input-group select {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 1rem;
+  font-family: 'Outfit', sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff !important;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+/* Override pastel.css for select options */
+.premium-input-group select option {
+  background: #0B132B;
+  color: #fff;
+}
+
+.premium-input-group input:focus,
+.premium-input-group select:focus {
+  outline: none;
+  border-color: #00d4ff;
+  background: rgba(0, 212, 255, 0.05);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+.premium-input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Form Action Button */
+.glow-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #00d4ff 0%, #0055ff 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 85, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  margin-top: 1rem;
+  font-family: inherit;
+}
+
+.glow-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: 0.5s;
+}
+
+.glow-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(0, 85, 255, 0.5);
+}
+
+.glow-btn:hover::after {
+  left: 100%;
+}
+
+/* Animations */
+@keyframes slideFadeIn {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideFadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .flash-popup {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--accent-color);
+  background: rgba(230, 57, 70, 0.9);
+  backdrop-filter: blur(10px);
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
   font-weight: bold;
   z-index: 2000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  animation: fadeOut 3s ease forwards;
+  box-shadow: 0 10px 30px rgba(230, 57, 70, 0.3);
+  animation: fadeOut 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 @keyframes fadeOut {
-  0% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; display: none; }
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  10% { opacity: 1; transform: translate(-50%, 0); }
+  80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); pointer-events: none; }
 }
 
-select {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 1rem;
-  font-family: 'Outfit', sans-serif;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--text-dark);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 4px rgba(168, 218, 220, 0.3);
-}
 </style>
 
 {% with messages = get_flashed_messages() %}
@@ -50,34 +268,72 @@ select:focus {
   {% endif %}
 {% endwith %}
 
-<div class="glass-container">
-  <h1>Intelligent Traffic Sensor Clearinghouse</h1>
-  <p>Access sensor testing data, reports, and AI-powered insights.</p>
+<!-- New Abstract Background Orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-  <form action="{{ url_for('nchrp_bp.answer_nchrp') }}" method="post">
-    <div class="input-group">
-      <label for="user_question">Name</label>
-      <input type="text" id="user_question" placeholder="Enter your name here..." name="user_question" required />
-    </div>
-    
-    <div class="input-group">
-      <label for="user_email">E-mail</label>
-      <input type="email" id="user_email" placeholder="Enter your e-mail..." name="user_email" required />
-    </div>
+<div class="hero-wrapper">
+  
+  <div class="hero-text">
+    <div class="badge">Advanced Evaluation Platform</div>
+    <h1>Intelligent Traffic Sensor Clearinghouse</h1>
+    <p>Access sensor testing data, reports, and AI-powered insights</p>
+  </div>
 
-    <div class="input-group">
-        <label for="user_role">User Role</label>
-        <select name="user_role" id="user_role" required>
-          <option value="">Select User Role</option>
-          <option value="public">Public User</option>
-          <option value="state_dot">State DOT</option>
-          <option value="testing_facility">Testing Facility</option>
-          <option value="manufacturer">Manufacturer</option>
-          <option value="admin">Clearinghouse Admin</option>
-        </select>
-    </div>
+  <div class="hero-form-container">
+    <div class="premium-glass-card">
+      <form action="{{ url_for('nchrp_bp.answer_nchrp') }}" method="post">
+        
+        <div class="premium-input-group">
+          <label for="user_question">Full Name</label>
+          <input type="text" id="user_question" placeholder="Enter your name" name="user_question" required autocomplete="off" />
+        </div>
+        
+        <div class="premium-input-group">
+          <label for="user_email">E-mail</label>
+          <input type="email" id="user_email" placeholder="name@organization.com" name="user_email" required autocomplete="off" />
+        </div>
 
-    <button type="submit" class="btn">Enter</button>
-  </form>
+        <div class="premium-input-group">
+            <label for="user_role">User Role</label>
+            <select name="user_role" id="user_role" required>
+              <option value="" disabled selected>Select User Role</option>
+              <option value="public">Public Viewer</option>
+              <option value="state_dot">State DOT Representative</option>
+              <option value="testing_facility">Testing Facility Operator</option>
+              <option value="manufacturer">Device Manufacturer</option>
+              <option value="admin">Clearinghouse Admin</option>
+            </select>
+        </div>
+
+        <button type="submit" class="glow-btn">Authenticate Access</button>
+      </form>
+    </div>
+  </div>
+
 </div>
+
+<!-- Additional script to enforce dark mode navbar styling on DOM load for this specific page -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.querySelector('.navbar');
+    if(nav) {
+      nav.style.background = 'rgba(5, 10, 21, 0.5)';
+      nav.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+      
+      const links = nav.querySelectorAll('.nav-link');
+      if (links) {
+        links.forEach(l => l.style.color = '#fff');
+      }
+      
+      const brand = nav.querySelector('.nav-brand');
+      if (brand) {
+        brand.style.background = 'linear-gradient(270deg, #fff 0%, #00d4ff 100%)';
+        brand.style.webkitBackgroundClip = 'text';
+        brand.style.webkitTextFillColor = 'transparent';
+      }
+    }
+  });
+</script>
+
 {% endblock %}

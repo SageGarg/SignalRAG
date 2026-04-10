@@ -18,7 +18,9 @@
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  width: 320px;
+  flex: 1;
+  min-width: 250px;
+  max-width: 340px;
   padding: 1.5rem;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -50,7 +52,7 @@
 }
 </style>
 
-<div class="glass-container wide" style="max-width: 800px;">
+<div class="glass-container wide" style="max-width: 1200px; width: 95%;">
   <h2>Welcome, {{ user_name }}!</h2>
   <p style="margin-bottom: 0;">User Role: <strong>{{ user_role }}</strong></p>
   <p>Select how you would like to explore the Clearinghouse:</p>
@@ -58,19 +60,28 @@
   <div class="card-container">
     <div class="card">
       <img src="{{ url_for('static', filename='Image/chatbot.jpg') }}" alt="Traffic Sensor Clearinghouse" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'" />
-      <h3>🤖 Traffic Sensor Clearinghouse</h3>
-      <p>Ask questions and get answers from reports, standards, and testing documents</p>
+      <h3>🤖 Document Intelligence</h3>
+      <p>Ask questions and get answers from unstructured reports, standards, and documentation.</p>
       <form action="{{ url_for('nchrp_bp.go_to_clearinghouse') }}" method="get">
-        <button type="submit" class="btn">Open Chatbot</button>
+        <button type="submit" class="btn">Open Report Intelligence</button>
       </form>
     </div>
 
     <div class="card">
       <img src="{{ url_for('static', filename='Image/reports.jpg') }}" alt="Reports Section" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'" />
-      <h3>📊 Sensor Test Results</h3>
-      <p>Explore and compare the sensor test results</p>
+      <h3>📊 Sensor Performance Data</h3>
+      <p>Explore and compare sensor test results</p>
       <form action="{{ url_for('nchrp_bp.testSampleReport') }}" method="get">
-        <button type="submit" class="btn">View Data</button>
+        <button type="submit" class="btn">Open Sensor Analytics</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=500&auto=format&fit=crop" alt="Unified Assistant" />
+      <h3>🧠 Unified Intelligence Engine</h3>
+      <p>Search across reports and sensor data together, and get unified, insight-driven answers.</p>
+      <form action="{{ url_for('nchrp_bp.unified_chat') }}" method="get">
+        <button type="submit" class="btn">Open Intelligence Engine</button>
       </form>
     </div>
   </div>

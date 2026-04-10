@@ -16,8 +16,8 @@
 
   <!-- Navigation Bar -->
   <nav class="navbar">
-    <a href="{% if 'bdib' in request.path %}/bdib_bp/{% elif 'nchrp' in request.path %}/nchrp_bp/{% else %}/{% endif %}" class="nav-brand">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="{% if 'bdib' in request.path %}/bdib_bp/{% elif 'nchrp' in request.path %}{{ url_for('nchrp_bp.choices') if session.get('user_email') else url_for('nchrp_bp.index_nchrp') }}{% else %}/{% endif %}" class="nav-brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
       </svg>
       {% if 'bdib' in request.path %}
@@ -30,11 +30,12 @@
       {% block nav_title %}{% endblock %}
     </a>
     
-    <div class="nav-links">
+    <div class="nav-links" style="display: flex; flex-wrap: nowrap; align-items: center; white-space: nowrap; gap: 1rem;">
       {% if 'nchrp' in request.path %}
-        {% if request.endpoint not in ['nchrp_bp.index_nchrp', 'nchrp_bp.answer_nchrp'] %}
+        {% if request.endpoint not in ['nchrp_bp.index_nchrp', 'nchrp_bp.answer_nchrp', 'nchrp_bp.choices'] %}
           <a href="{{ url_for('nchrp_bp.go_to_clearinghouse') }}" class="nav-link {% if 'go_to_clearinghouse' in request.path or 'result' in request.path %}active{% endif %}">Knowledge Assistant</a>
           <a href="{{ url_for('nchrp_bp.testSampleReport') }}" class="nav-link {% if 'report' in request.path %}active{% endif %}">Data Explorer</a>
+          <a href="{{ url_for('nchrp_bp.unified_chat') }}" class="nav-link {% if 'unified_chat' in request.path %}active{% endif %}">Unified Assistant</a>
         {% endif %}
       {% endif %}
     </div>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}NCHRP Answer{% endblock %}
+{% block nav_title %}&nbsp;|&nbsp; Knowledge Assistant{% endblock %}
 
 {% block content %}
 <div class="glass-container wide">
@@ -21,13 +22,16 @@
       </div>
 
       <div class="chat-bubble chat-answer">
-        <h4>Synthesized Answer</h4>
+        <h4>Synthesized Answer (PDF Knowledge Base)</h4>
         <p style="margin: 0; white-space: pre-wrap;">{{ entry['answer'] }}</p>
-        
-        <br>
-        <h4>Raw Context Match</h4>
-        <p style="margin: 0; font-size: 0.9rem; opacity: 0.8; white-space: pre-wrap;">{{ entry['ChipAnswer'] }}</p>
       </div>
+
+      {% if entry['ChipAnswer'] and entry['ChipAnswer'] != "N/A" %}
+      <div class="chat-bubble chat-answer" style="background: rgba(255,255,255,0.7); border-left: 5px solid var(--accent-color);">
+        <h4>Open Source Answer</h4>
+        <p style="margin: 0; white-space: pre-wrap;">{{ entry['ChipAnswer'] }}</p>
+      </div>
+      {% endif %}
       {% endfor %}
 
       <!-- Rating Form -->
