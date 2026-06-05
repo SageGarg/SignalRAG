@@ -1,154 +1,184 @@
-# SignalVerse Chatbot
+# SignalRAG
 
-SignalVerse is a chatbot application built using Flask and Tailwind CSS. It utilizes language processing techniques for answering user queries based on a predefined knowledge base.
+> An AI-powered RAG (Retrieval-Augmented Generation) platform for traffic signal research, NCHRP clearinghouse data, and related datasets.
+
+---
+
+## Project Structure
+
+```
+signalRAG/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # Flask app entry point
+│   │   ├── routes/              # Blueprint route handlers
+│   │   │   ├── nchrp.py
+│   │   │   ├── nchrp_sql.py
+│   │   │   ├── bdib.py
+│   │   │   └── signalverse.py
+│   │   ├── services/            # Business logic
+│   │   │   ├── llm.py           # LLM / vectorstore / RAG pipeline
+│   │   │   └── db.py            # MySQL connection factory
+│   │   ├── models/              # Data models / schemas (future)
+│   │   └── utils/               # Shared helper functions (future)
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── frontend/
+│   ├── src/
+│   │   ├── pages/               # Jinja2 HTML templates
+│   │   ├── components/          # Reusable HTML partials (future)
+│   │   ├── assets/
+│   │   │   ├── css/             # Tailwind output + custom CSS
+│   │   │   ├── js/              # Client-side scripts
+│   │   │   └── images/          # Static images / icons
+│   │   ├── services/
+│   │   │   └── api.js           # Centralized API service layer
+│   │   └── utils/               # Frontend utility functions (future)
+│   ├── public/                  # Public static files (favicon, etc.)
+│   ├── package.json
+│   └── .env.example
+│
+├── docs/
+│   └── architecture.md          # System design and architecture notes
+│
+├── README.md
+├── .gitignore
+└── docker-compose.yml           # (optional) containerized deployment
+```
+
+---
+
+## Tech Stack
+
+| Layer      | Technology                                       |
+|------------|--------------------------------------------------|
+| Backend    | Python 3.10+, Flask 3.0, LangChain, ChromaDB    |
+| LLM        | OpenAI GPT-4o, text-embedding-ada-002           |
+| Database   | MySQL (local / AWS RDS)                          |
+| Frontend   | HTML, Vanilla CSS, Tailwind CSS, Vanilla JS      |
+| Hosting    | AWS EC2 (backend), AWS Amplify (frontend)        |
+
+---
+
+## Prerequisites
+
+- Python ≥ 3.10
+- Node.js ≥ 14.0
+- MySQL (local or remote)
+- OpenAI API key
+
+---
 
 ## Setup
 
-### Prerequisites
+### 1. Clone the repository
 
-- Python 3.x
-- Node.js and npm
+```bash
+git clone https://github.com/SageGarg/SignalRAG.git
+cd SignalRAG
+```
 
-### Installation
+### 2. Backend
 
-1. Clone the repository:
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-   ```bash
-   git clone https://github.com/SageGarg/signalVerse.git
-   ```
+# Create your .env from the example
+cp .env.example .env
+# → Fill in OPENAI_API_KEY, DB_PASSWORD, FLASK_SECRET_KEY, etc.
+```
 
-2. Install Python dependencies using pip:
+### 3. Frontend (Tailwind build)
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+cd frontend
+npm install
+npm run tailwind     # watches and rebuilds output.css on changes
+```
 
-3. Install Tailwind CSS:
+### 4. Run the application
 
-follow this:
-https://tailwindcss.com/docs/installation
+```bash
+# From backend/
+python app/main.py
+```
 
-              OR
-              THE GIVEN COMMANDS
+Access the app at `http://localhost:5000`.
 
-    ```bash
-    npm install -D tailwindcss
-    npx tailwindcss init
-    ```
+---
 
-    //node's version has to be greater than 14.0.0
+## Environment Variables
 
-    the above commands create a tailwind.config.js file, in that file add the following command:
-    content: ["./templates/*"],; this ensures all the html files in the templates folder can use tailwind.
+All secrets live in `.env` files — **never commit real `.env` files**.  
+See `backend/.env.example` and `frontend/.env.example` for the required variables.
 
-    then create an input.css file in the static/src directory, and add the following commands in the file:
-    @tailwind base;
+| Variable              | Description                                    |
+|-----------------------|------------------------------------------------|
+| `OPENAI_API_KEY`      | OpenAI API key                                 |
+| `AWS_ACCESS_KEY_ID`   | AWS credentials for S3 / other services        |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key                               |
+| `DB_HOST`             | MySQL host (default: `localhost`)              |
+| `DB_USER`             | MySQL username                                 |
+| `DB_PASSWORD`         | MySQL password                                 |
+| `DB_NAME_SIGNALVERSE` | DB name for SignalVerse module                 |
+| `DB_NAME_BDIB`        | DB name for BDIB module                        |
+| `DB_NAME_NCHRP`       | DB name for NCHRP module                       |
+| `FLASK_SECRET_KEY`    | Flask session secret                           |
+| `FLASK_DEBUG`         | `true` / `false`                               |
+| `ALLOWED_EMAILS`      | Comma-separated list of authorized user emails |
 
-@tailwind components;
-@tailwind utilities;
+---
 
-now create a css folder in the static folder. 4. Build Tailwind CSS:
+## Deployment
 
-    ```bash
-    npx tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch
-    ```
+### Backend — AWS EC2
 
-    IF YOU DON'T WANT TO RUN THIS COMMAND REPEATEDLY, ADD THIS IN package.json:
-    "scripts": {
-    "tailwind":"npx tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch"
+1. SSH into your EC2 instance.
+2. Install Python, pip, and MySQL.
+3. Clone the repo and set up the virtual environment.
+4. Copy `.env.example` → `.env` and fill in production values.
+5. Run with `gunicorn` behind `nginx`:
 
-}
-and then run the following command in the terminal:
-npm run tailwind
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 "app.main:app"
+```
 
-5. Install mySQL:
-   Make the database named Inventory and a sheet named store.
+### Frontend — AWS Amplify
 
-   ```bash
-   mydb = mysql.connector.connect(
-   host="localhost",
-   user="root",
-   passwd="Working@2024",
-   database = "Store"
-   )
+1. Connect your GitHub repository to AWS Amplify.
+2. Set build output directory to `frontend/src/assets/css`.
+3. Add environment variables (`VITE_API_BASE_URL`, etc.) in the Amplify console.
+4. Amplify auto-deploys on every push to `main`.
 
-   mycursor = mydb.cursor()
-   mycursor.execute("CREATE DATABASE Store")
-   mycursor.execute("CREATE TABLE data (`Sr. No.` INT,Email_ID VARCHAR(255), Question TEXT, SignalVerse_Answer TEXT, Rating INT, Raw_AI_Response TEXT, Rating2 INT)")
-   ```
+### Local Development
 
-### Usage
+```bash
+# Terminal 1 — backend
+cd backend && python app/main.py
 
-1. Run the Flask application:
+# Terminal 2 — Tailwind watcher
+cd frontend && npm run tailwind
+```
 
-   ```bash
-   python3 main.py
-   ```
+---
 
-2. Access the application through a web browser at `trafficsignalverse.com.
+## Modules
 
-## Components
+| Module       | URL Prefix    | Description                                              |
+|--------------|---------------|----------------------------------------------------------|
+| SignalVerse  | `/`           | General traffic signal RAG chatbot                      |
+| BDIB         | `/bdib_bp`    | Before/During/In the Beginning knowledge assistant      |
+| NCHRP        | `/nchrp_bp`   | NCHRP clearinghouse PDF + Excel data explorer           |
 
-### Backend
+---
 
-- **Flask**: Python web framework used for handling HTTP requests and responses.
-- **Pandas**: Library for data manipulation and analysis.
-- **openpyxl**: Library for reading and writing Excel files.
-- **langchain**: Library for language processing tasks such as text splitting and embeddings.
+## Security Notes
 
-### Frontend
-
-- **HTML/CSS**: Markup and styling for the user interface.
-- **Tailwind CSS**: Utility-first CSS framework for designing responsive web applications.
-
-### Features
-
-- Users can ask questions and receive answers from the chatbot.
-- Chat history is displayed and can be cleared.
-- Users can rate the answers provided by the chatbot, which get stored in the Inventory database.
-
-## File Structure
-
-- `main.py`: Flask application and backend logic.
-- `requirements.txt`: Python dependencies.
-- `templates/`: HTML templates for rendering pages.
-- `static/`: Static files including CSS and images.
-
-## Deploying SQL on ec2 instance
-
-### Step 1: Update the system
-
-sudo apt update
-
-### Step 2: Install MySql
-
-sudo apt install mysql-server
-
-### Step 3: Check the Status of MySql (Active or Inactive)
-
-sudo systemctl status mysql
-
-### Step 4: Login to MySql as a root
-
-sudo mysql
-
-### Step 5: Update the password for the MySql Server
-
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'place-your-password-here';
-
-FLUSH PRIVILEGES;
-
-### Step 6: Test the MySql server if it is working by running sample sql queries
-
-CREATE DATABASE mysql_test;
-
-USE mysql_test;
-
-CREATE TABLE table1 (id INT, name VARCHAR(45));
-
-INSERT INTO table1 VALUES(1, 'Virat'), (2, 'Sachin'), (3, 'Dhoni'), (4, 'ABD');
-
-SELECT \* FROM table1;
-
-models we have:
-gpt-4-turbo gpt-4o gpt-4o-2024-05-13 gpt-4o-2024-08-06 gpt-4o-realtime-preview-2024-12-17 gpt-4o-mini-realtime-preview-2024-12-17 gpt-4o-mini-audio-preview-2024-12-17 gpt-4o-mini-realtime-preview gpt-4o-mini-audio-preview gpt-4o-2024-11-20 text-embedding-ada-002
+- `.env` is in `.gitignore` — **never push it**.
+- The `.pem` key file (`signalverse.pem`) is also gitignored.
+- `ALLOWED_EMAILS` gates access to the NCHRP module.
+- All API keys must be rotated if accidentally exposed.

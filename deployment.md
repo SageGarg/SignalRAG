@@ -27,7 +27,7 @@ scp -i "signalverse.pem" -r Data/ ubuntu@ec2-3-84-187-185.compute-1.amazonaws.co
 ### SSH into Test Instance
 
 ```bash
-ssh -i "signalverse.pem" ubuntu@ec2-3-84-187-185.compute-1.amazonaws.com
+ssh -i "signalverse.pem" ubuntu@ec2-34-205-211-2.compute-1.amazonaws.com
 ```
 
 ---

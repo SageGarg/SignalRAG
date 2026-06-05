@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}SignalVerse Home{% endblock %}
+
+{% block content %}
+<div class="glass-container">
+  <h1>SignalVerse</h1>
+  <p>Effortlessly uncover accurate traffic engineering insights—ask questions and get answers from multiple documents without the hassle of manual searches.</p>
+
+  <form action="/answer" method="post">
+    <div class="input-group">
+      <label for="user_question">Name</label>
+      <input type="text" id="user_question" placeholder="Enter your name here..." name="user_question" required />
+    </div>
+    <div class="input-group">
+      <label for="user_email">E-mail</label>
+      <input type="email" id="user_email" placeholder="Enter your e-mail here..." name="user_email" required />
+    </div>
+    <button type="submit" class="btn">Enter</button>
+  </form>
+</div>
+{% endblock %}

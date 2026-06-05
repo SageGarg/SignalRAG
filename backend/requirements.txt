@@ -1,0 +1,26 @@
+# Flask
+Flask==3.0.2
+python-dotenv
+
+# Data processing
+pandas==2.2.1
+openpyxl==3.1.2
+
+# LLM & embeddings
+langchain==0.1.13
+langchain-community
+langchain-openai
+langchain-chroma
+langchain-text-splitters
+openai
+chromadb
+tiktoken
+keybert
+
+# Document loaders
+pypdf
+cryptography
+docx2txt
+
+# Database
+mysql-connector-python

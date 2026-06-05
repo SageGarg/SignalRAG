@@ -1,0 +1,12 @@
+{
+  "name": "signalrag-frontend",
+  "version": "1.0.0",
+  "description": "SignalRAG frontend — Tailwind CSS build toolchain",
+  "scripts": {
+    "tailwind": "npx tailwindcss -i ./src/assets/css/input.css -o ./src/assets/css/output.css --watch",
+    "build": "npx tailwindcss -i ./src/assets/css/input.css -o ./src/assets/css/output.css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
